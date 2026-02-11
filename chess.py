@@ -1,3 +1,6 @@
+from typing import TypedDict
+
+
 DIMENSION = 8
 
 NONE = 0
@@ -34,26 +37,65 @@ SW_DIR = (1, -1)
 W_DIR = (0, -1)
 NW_DIR = (-1, -1)
 
-BOARD = [
-    [W_R, W_N, W_B, W_Q, W_K, W_B, W_N, W_R],
-    [W_P] * 8,
-    [NONE] * 8,
-    [NONE] * 8,
-    [NONE] * 8,
-    [NONE] * 8,
-    [B_P] * 8,
-    [B_R, B_N, B_B, B_Q, B_K, B_B, B_N, B_R],
-]
+INITIAL_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+FEN_MAP = {"P": W_P, "N": W_N, "B": W_B, "R": W_R, "Q": W_Q, "K": W_K, "p": B_P, "n": B_N, "b": B_B, "r": B_R, "q": B_Q, "k": B_K}
+
+
+class CastRight(TypedDict):
+    K: bool
+    k: bool
+    Q: bool
+    q: bool
+
+
+class GameState(TypedDict):
+    color: int
+    board: list[list[int]]
+    eppos: tuple[int, int]
+    cstlr: CastRight
+    halfm: int
+    fullm: int
+
+
+class Move(TypedDict):
+    src: tuple[int, int]
+    tgt: tuple[int, int]
+    cpt: tuple[int, int] | None
+
+
+def alg_to_pos(square: str) -> tuple[int, int]:
+    file = ord(square[0]) - ord("a")
+    rank = int(square[1])
+    row = DIMENSION - rank
+    return row, file
+
+
+def fen_state(fen: str) -> GameState:
+    board_p, color_p, cstlr_p, eppos_p, halfm_p, fullm_p = fen.strip().split()
+    board: list[list[int]] = []
+    for f_row in board_p.split("/"):
+        b_row: list[int] = []
+        for c in f_row:
+            if c.isdigit():
+                b_row.extend([NONE] * int(c))
+            else:
+                b_row.append(FEN_MAP[c])
+        board.append(b_row)
+    color = WHITE if color_p == "w" else BLACK
+    cstlr = {"K": "K" in cstlr_p, "Q": "Q" in cstlr_p, "k": "k" in cstlr_p, "q": "q" in cstlr_p}
+    eppos = None if eppos_p == "-" else alg_to_pos(eppos_p)
+    halfm, fullm = int(halfm_p), int(fullm_p)
+    return GameState(color=color, board=board, eppos=eppos, cstlr=cstlr, halfm=halfm, fullm=fullm)
 
 
 def is_color(p: int, color: int):
+    if not p:
+        return False
     return p * color > 0
 
 
-def is_enemy(p: int, color: int):
-    if not color:
-        return False
-    return p * color < 0
+def add_tups(t1: tuple[int, int], t2: tuple[int, int]):
+    return t1[0] + t2[0], t1[1] + t2[1]
 
 
 def coordinates_by_color(color: int, board: list[list[int]]):
@@ -78,52 +120,46 @@ def exists(pos: tuple[int, int]):
 
 def pawn_steps(color: int, board: list[list[int]], pos: tuple[int, int]):
     l = []
-    cur_r, cur_c = pos
-    rnk_map = {WHITE: 1, BLACK: 7}
-    dir_map = {WHITE: S_DIR, BLACK: N_DIR}
-    first_m = cur_r == rnk_map[color]
-    dir_r, dir_c = dir_map[color]
+    rnk_map = {BLACK: 1, WHITE: 7}
+    dir_map = {BLACK: S_DIR, WHITE: N_DIR}
+    first_m = pos[0] == rnk_map[color]
+    dir_off = dir_map[color]
     j_times = 2 if first_m else 1
-    nxt_r = cur_r + dir_r
-    nxt_c = cur_c + dir_c
-    nxt_pos = (nxt_r, nxt_c)
+    nxt_pos = add_tups(pos, dir_off)
     while exists(nxt_pos) and j_times:
-        next_p = board[nxt_r][nxt_c]
+        next_p = board[nxt_pos[0]][nxt_pos[1]]
         if next_p:
             break
-        l.append((pos, nxt_pos, None))
-        nxt_r += dir_r
-        nxt_c += dir_c
+        l.append(Move(src=pos, tgt=nxt_pos, cap=None))
+        nxt_pos = add_tups(nxt_pos, dir_off)
         j_times -= 1
     return l
 
 
-def pawn_captures(color: int, board: list[list[int]], pos: tuple[int, int], enp_pos: tuple[int, int] | None):
+def pawn_captures(color: int, board: list[list[int]], pos: tuple[int, int], eppos: tuple[int, int] | None):
     l = []
-    stp_dir_map = {WHITE: S_DIR, BLACK: N_DIR}
-    cap_dir_map = {WHITE: [SE_DIR, SW_DIR], BLACK: [NE_DIR, NW_DIR]}
-    cur_r, cur_c = pos
-    for dir_r, dir_c in cap_dir_map[color]:
-        nxt_r = cur_r + dir_r
-        nxt_c = cur_c + dir_c
-        nxt_pos = (nxt_r, nxt_c)
+    stp_dir_map = {BLACK: S_DIR, WHITE: N_DIR}
+    cap_dir_map = {BLACK: [SE_DIR, SW_DIR], WHITE: [NE_DIR, NW_DIR]}
+    for cap_off in cap_dir_map[color]:
+        nxt_pos = add_tups(pos, cap_off)
         if not exists(nxt_pos):
             continue
-        p = board[nxt_r][nxt_c]
-        if is_enemy(p=p, color=color):
-            l.append((pos, nxt_pos, nxt_pos))
-        elif nxt_pos == enp_pos:
-            cap_pos = nxt_r + stp_dir_map[color], nxt_c
-            l.append((pos, enp_pos, cap_pos))
+        p = board[nxt_pos[0]][nxt_pos[1]]
+        if not is_color(p=p, color=color):
+            l.append(Move(src=pos, tgt=nxt_pos, cap=nxt_pos))
+        elif nxt_pos == eppos:
+            stp_off = stp_dir_map[color]
+            cap_pos = add_tups(nxt_pos, stp_off)
+            l.append(Move(src=pos, tgt=eppos, cap=cap_pos))
         else:
             continue
     return l
 
 
-def pawn_moves(color: int, board: list[list[int]], pos: tuple[int, int], enp_pos: tuple[int, int] | None):
+def pawn_moves(color: int, board: list[list[int]], pos: tuple[int, int], eppos: tuple[int, int] | None):
     l = []
     l += pawn_steps(color=color, board=board, pos=pos)
-    l += pawn_captures(color=color, board=board, pos=pos, enp_pos=enp_pos)
+    l += pawn_captures(color=color, board=board, pos=pos, eppos=eppos)
     return l
 
 
@@ -152,7 +188,7 @@ def king_moves(color: int, board: list[list[int]], pos: tuple[int, int], **kwarg
     return l
 
 
-def valid_moves(color: int, board: list[list[int]], enp_pos: tuple[int, int] | None):
+def valid_moves(color: int, board: list[list[int]], eppos: tuple[int, int] | None):
     l = []
     func_map = {
         PAWN: pawn_moves,
@@ -168,14 +204,15 @@ def valid_moves(color: int, board: list[list[int]], enp_pos: tuple[int, int] | N
         if t not in func_map:
             continue
         func = func_map[t]
-        l += func(color=color, board=board, pos=pos, enp_pos=enp_pos)
+        l += func(color=color, board=board, pos=pos, eppos=eppos)
     return l
 
 
-color = WHITE
-enp_pos = None
-moves = valid_moves(color=color, board=BOARD, enp_pos=enp_pos)
+state = fen_state(INITIAL_FEN)
+print(state)
+moves = valid_moves(
+    color=state["color"],
+    board=state["board"],
+    eppos=state["eppos"],
+)
 print(moves)
-t1 = (1, 2)
-t2 = (3, 4)
-print(t1 + t2)
