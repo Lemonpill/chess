@@ -1,4 +1,9 @@
+from typing import List
 from const import State
+from const import Color
+from const import Square
+from const import Board
+from const import Piece
 from const import NONE
 from const import WHITE
 from const import BLACK
@@ -32,18 +37,18 @@ FEN_PIECE = {
 }
 
 
-def fen_color(s: str) -> int:
+def fen_color(s: str) -> Color:
     return WHITE if s == "w" else BLACK
 
 
-def fen_piece(s: str) -> list[int]:
+def fen_piece(s: str) -> List[Piece]:
     if s.isdigit():
         return [NONE] * int(s)
     else:
         return [FEN_PIECE[s]]
 
 
-def fen_board(s: str) -> list[int]:
+def fen_board(s: str) -> Board:
     b = []
     pts = s.split("/")
     for p in reversed(pts):
