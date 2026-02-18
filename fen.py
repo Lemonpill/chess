@@ -21,7 +21,7 @@ from const import WK
 from const import BK
 
 
-FEN_PIECE = {
+FEN_PIECE: dict[str, Piece] = {
     "P": WP,
     "N": WN,
     "B": WB,
