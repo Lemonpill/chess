@@ -1,9 +1,10 @@
 from typing import List
 from const import State
 from const import Color
-from const import Square
 from const import Board
 from const import Piece
+from const import Square
+from const import NO_SQUARE
 from const import NONE
 from const import WHITE
 from const import BLACK
@@ -21,6 +22,7 @@ from const import WK
 from const import BK
 
 
+FILES = "abcdefgh"
 FEN_PIECE: dict[str, Piece] = {
     "P": WP,
     "N": WN,
@@ -37,6 +39,18 @@ FEN_PIECE: dict[str, Piece] = {
 }
 
 
+def parse_square(s: str) -> Square:
+    file = FILES.index(s[0])
+    rank = int(s[1]) - 1
+    return rank * 8 + file
+
+
+def fen_en_passant(s: str) -> int:
+    if s == "-":
+        return NO_SQUARE
+    return parse_square(s)
+
+
 def fen_color(s: str) -> Color:
     return WHITE if s == "w" else BLACK
 
@@ -49,7 +63,7 @@ def fen_piece(s: str) -> List[Piece]:
 
 
 def fen_board(s: str) -> Board:
-    b = []
+    b: Board = []
     pts = s.split("/")
     for p in reversed(pts):
         for s in p:

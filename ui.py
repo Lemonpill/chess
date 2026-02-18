@@ -8,25 +8,25 @@ from const import BN
 from const import WB
 from const import BB
 from const import WR
-from const import BR
+from const import SE
 from const import WQ
 from const import BQ
 from const import WK
 from const import BK
 
 
-GUI_PIECE = {BK: "♔", WK: "♚", BQ: "♕", WQ: "♛", BR: "♖", WR: "♜", BB: "♗", WB: "♝", BN: "♘", WN: "♞", BP: "♙", WP: "♟"}
+GUI_PIECE = {BK: "♔", WK: "♚", BQ: "♕", WQ: "♛", SE: "♖", WR: "♜", BB: "♗", WB: "♝", BN: "♘", WN: "♞", BP: "♙", WP: "♟"}
 GUI_BLANK = {1: "◻", -1: "◼"}
 
 
 def draw_state(state: State) -> None:
-    board, color = state
+    board, _ = state
     h = [string.ascii_lowercase[i].upper() for i in range(DIMENSION)]
     h.insert(0, " ")
     print(" ".join(h))
     i = 0
     for r in range(DIMENSION):
-        r_lst = []
+        r_lst: list[str] = []
         for c in range(DIMENSION):
             if not r_lst:
                 r_lst.append(str(r + 1))

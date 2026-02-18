@@ -7,22 +7,33 @@ Color: TypeAlias = int
 Square: TypeAlias = int
 PieceType: TypeAlias = int
 Piece: TypeAlias = int
+Move = tuple[
+    Square,  # source
+    Square,  # target
+]
+Board = List[Piece]
+State = tuple[
+    Board,  # board
+    Color,  # color
+]
 
 DIMENSION = 8
 
-T: Offset = 8
-TR: Offset = 9
-R: Offset = 1
-BR: Offset = -7
-B: Offset = -8
-BL: Offset = -9
-L: Offset = -1
-TL: Offset = 7
+N: Offset = 8
+NE: Offset = 9
+E: Offset = 1
+SE: Offset = -7
+S: Offset = -8
+SW: Offset = -9
+W: Offset = -1
+NW: Offset = 7
 
 WHITE: Color = 1
 BLACK: Color = -1
 COLORS: List[Color] = [WHITE, BLACK]
 
+
+NO_SQUARE: Square = -1
 A1: Square = 0
 B1: Square = 1
 C1: Square = 2
@@ -128,16 +139,4 @@ WK: Piece = KING * WHITE
 BK: Piece = KING * BLACK
 
 WHITES: List[Piece] = [WP, WN, WB, WR, WQ, WK]
-BLACKS: List[Piece] = [BP, BN, BB, BR, BQ, BK]
-
-Move = tuple[
-    Square,  # source
-    Square,  # target
-]
-
-Board = List[Piece]
-
-State = tuple[
-    Board,  # board
-    Color,  # color
-]
+BLACKS: List[Piece] = [BP, BN, BB, SE, BQ, BK]
