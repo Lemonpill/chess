@@ -1,14 +1,28 @@
-from typing import TypeAlias
 from typing import List
+from typing import TypeAlias
+
+
+Offset: TypeAlias = int
+Color: TypeAlias = int
+Square: TypeAlias = int
+PieceType: TypeAlias = int
+Piece: TypeAlias = int
 
 DIMENSION = 8
 
-Color: TypeAlias = int
+T: Offset = 8
+TR: Offset = 9
+R: Offset = 1
+BR: Offset = -7
+B: Offset = -8
+BL: Offset = -9
+L: Offset = -1
+TL: Offset = 7
+
 WHITE: Color = 1
 BLACK: Color = -1
 COLORS: List[Color] = [WHITE, BLACK]
 
-Square: TypeAlias = int
 A1: Square = 0
 B1: Square = 1
 C1: Square = 2
@@ -82,7 +96,15 @@ G8: Square = 62
 H8: Square = 63
 SQUARES: List[Square] = list(range(64))
 
-PieceType: TypeAlias = int
+RANK_1: List[Square] = [A1, B1, C1, D1, E1, F1, G1, H1]
+RANK_2: List[Square] = [A2, B2, C2, D2, E2, F2, G2, H2]
+RANK_3: List[Square] = [A3, B3, C3, D3, E3, F3, G3, H3]
+RANK_4: List[Square] = [A4, B4, C4, D4, E4, F4, G4, H4]
+RANK_5: List[Square] = [A5, B5, C5, D5, E5, F5, G5, H5]
+RANK_6: List[Square] = [A6, B6, C6, D6, E6, F6, G6, H6]
+RANK_7: List[Square] = [A7, B7, C7, D7, E7, F7, G7, H7]
+RANK_8: List[Square] = [A8, B8, C8, D8, E8, F8, G8, H8]
+
 NONE: PieceType = 0
 PAWN: PieceType = 1
 KNIGHT: PieceType = 2
@@ -92,7 +114,6 @@ QUEEN: PieceType = 5
 KING: PieceType = 6
 PIECE_TYPES: List[PieceType] = list(range(1, 7))
 
-Piece: TypeAlias = int
 WP: Piece = PAWN * WHITE
 BP: Piece = PAWN * BLACK
 WN: Piece = KNIGHT * WHITE
@@ -105,3 +126,18 @@ WQ: Piece = QUEEN * WHITE
 BQ: Piece = QUEEN * BLACK
 WK: Piece = KING * WHITE
 BK: Piece = KING * BLACK
+
+WHITES: List[Piece] = [WP, WN, WB, WR, WQ, WK]
+BLACKS: List[Piece] = [BP, BN, BB, BR, BQ, BK]
+
+Move = tuple[
+    Square,  # source
+    Square,  # target
+]
+
+Board = List[Piece]
+
+State = tuple[
+    Board,  # board
+    Color,  # color
+]
